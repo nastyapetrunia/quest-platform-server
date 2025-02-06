@@ -6,7 +6,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.route("/health")
 def health():
-    return 200
+    return "healthy", 200
 
 @socketio.on("message")
 def echo_message(msg):
