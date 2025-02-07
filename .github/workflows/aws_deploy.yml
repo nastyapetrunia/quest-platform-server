@@ -43,6 +43,9 @@ jobs:
       - name: Deploy new ElasticBeanstalk Application Version
         run: |
           aws elasticbeanstalk update-environment \
-          --environment-name ${{ env.EB_ENV_NAME }} \
-          --version-label "ver-${{ github.sha }}" \
-          --option-settings "Namespace=aws:elasticbeanstalk:application:environment,OptionName=MONGO_URI,Value=${{ secrets.MONGO_URI }},Namespace=aws:elasticbeanstalk:application:environment,OptionName=MONGO_DB_NAME,Value=${{ secrets.MONGO_DB_NAME }},Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_SECRET_KEY,Value=${{ secrets.JWT_SECRET_KEY }}"
+            --environment-name "${{ env.EB_ENV_NAME }}" \
+            --version-label "ver-${{ github.sha }}" \
+            --option-settings \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MONGO_URI,Value="${{ secrets.MONGO_URI }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MONGO_DB_NAME,Value="${{ secrets.MONGO_DB_NAME }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_SECRET_KEY,Value="${{ secrets.JWT_SECRET_KEY }}"
