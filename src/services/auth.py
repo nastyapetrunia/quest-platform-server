@@ -1,11 +1,11 @@
 import datetime
 from werkzeug.security import generate_password_hash
 
-from src.utils.helpers import generate_jwt_token
-from src.database.user.service import find_user_by_email
 from src.database.utils.service import add_new_records
 from src.database.utils.collections import Collections
-from src.utils.exceptions import EmailInUse
+from src.database.user.service import find_user_by_email
+from src.utils.exceptions import EmailInUse, InvalidEmail
+from src.utils.helpers import generate_jwt_token, validate_email
 
 
 def signup_with_email(data: dict):
@@ -31,6 +31,10 @@ def signup_with_email(data: dict):
     user_email = data["email"]
     user_password = data["password"]
     user_name = data["name"]
+
+    email_validation_success, message = validate_email(user_email=user_email)
+    if not email_validation_success:
+        raise InvalidEmail(message)
 
     existing_user = find_user_by_email(user_email)
 

@@ -2,7 +2,7 @@ from flask_restx import Namespace, Resource, fields
 from flask import request
 from pydantic import BaseModel, ValidationError
 from src.utils.helpers import format_payload_validation_errors
-from src.utils.exceptions import EmailInUse, InsertionError, DatabaseConnectionError, DocumentValidationError
+from src.utils.exceptions import EmailInUse, InsertionError, DatabaseConnectionError, DocumentValidationError, InvalidEmail
 from src.services.auth import signup_with_email
 
 
@@ -33,7 +33,7 @@ class SignupWithEmail(Resource):
         try:
             token = signup_with_email(data=data)
             return {"token": token}, 201
-        except (EmailInUse, ValueError, DocumentValidationError) as e:
+        except (EmailInUse, ValueError, DocumentValidationError, InvalidEmail) as e:
             return {"error": str(e)}, 400
         except (DatabaseConnectionError, InsertionError, Exception) as e:
             return {"error": str(e)}, 500

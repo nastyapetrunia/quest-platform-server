@@ -14,3 +14,6 @@ class DocumentValidationError(Exception):
 
 class InsertionError(Exception):
     """Raised when document insertion fails."""
+
+class InvalidEmail(Exception):
+    """Raised when email validation fails."""
