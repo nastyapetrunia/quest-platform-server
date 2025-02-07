@@ -17,3 +17,8 @@ class InsertionError(Exception):
 
 class InvalidEmail(Exception):
     """Raised when email validation fails."""
+
+class WrongEmailOrPassword(Exception):
+    """Raised when user is trying to log in with invalid credentials"""
+    def __init__(self, message="Wrong email or password"):
+        super().__init__(message)

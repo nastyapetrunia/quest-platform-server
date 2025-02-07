@@ -23,9 +23,20 @@ def format_payload_validation_errors(errors):
 
     for error in errors:
         field = ".".join(error["loc"])
-        message = f"Field '{field}' is required."
+        error_type = error["type"]
+        message = error["msg"]
 
-        error_messages.append(message)
+        if "required" in error_type:
+            error_message = f"Field '{field}' is required."
+        elif "type_error" in error_type:
+            expected_type = error_type.split(".")[-1]
+            error_message = f"Field '{field}' must be of type {expected_type}."
+        elif "value_error" in error_type:
+            error_message = f"Field '{field}' has an invalid value: {message}."
+        else:
+            error_message = f"Field '{field}' has an error: {message}."
+
+        error_messages.append(error_message)
 
     return "\n".join(error_messages)
 

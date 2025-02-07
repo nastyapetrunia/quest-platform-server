@@ -7,5 +7,5 @@ def find_user_by_email(user_email, ) -> dict:
     return read(db_name=MONGO_DB_NAME,
                 collection_name="Users",
                 query={"email": user_email},
-                include_id=False,
-                find_one=True)
+                find_one=True,
+                exclude_id=False)

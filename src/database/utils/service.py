@@ -75,7 +75,7 @@ def add_new_records(collection: Collections, documents: Union[List[dict], dict],
     return _create(documents, db_name, collection_name)
 
 
-def read(db_name: str, collection_name: str, query: dict = None, include_id: bool = False, find_one: bool = False):
+def read(db_name: str, collection_name: str, query: dict = None, exclude_id: bool = True, find_one: bool = False):
     """
     Retrieves records from a specified MongoDB collection.
 
@@ -90,12 +90,17 @@ def read(db_name: str, collection_name: str, query: dict = None, include_id: boo
         db = client[db_name]
         collection = db[collection_name]
 
+        if exclude_id:
+            exclude_fields_dict = {"_id": 0}
+        else:
+            exclude_fields_dict = {}
+
         if find_one:
-            document = collection.find_one(query, {"_id": int(include_id)})
+            document = collection.find_one(query, exclude_fields_dict)
             logger.info(f"Got document: {document}")
             return {"success": True, "result": document}
         else:
-            documents = list(collection.find(query, {"_id": int(include_id)}))
+            documents = list(collection.find(query, exclude_fields_dict))
             logger.info(f"Got records: {documents}")
             return {"success": True, "result": documents}
 

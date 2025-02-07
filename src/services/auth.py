@@ -1,11 +1,11 @@
 import datetime
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from src.database.utils.service import add_new_records
 from src.database.utils.collections import Collections
 from src.database.user.service import find_user_by_email
-from src.utils.exceptions import EmailInUse, InvalidEmail
 from src.utils.helpers import generate_jwt_token, validate_email
+from src.utils.exceptions import EmailInUse, InvalidEmail, WrongEmailOrPassword
 
 
 def signup_with_email(data: dict):
@@ -55,3 +55,37 @@ def signup_with_email(data: dict):
     result = add_new_records(collection=Collections.USER, documents=new_user)
 
     return generate_jwt_token(str(result["inserted_id"]))
+
+def login_with_email(data: dict):
+    """
+    Authenticates a user by email and password.
+
+    This function checks if a user with the provided email exists in the database.
+    If the user exists, it verifies the password against the stored hashed password.
+    Upon successful authentication, a JSON Web Token (JWT) is generated and returned.
+
+    Args:
+        data (dict): A dictionary containing the user's login credentials:
+            - "email" (str): The user's email address.
+            - "password" (str): The user's password.
+
+    Raises:
+        WrongEmailOrPassword: If the email does not exist or the password is incorrect.
+
+    Returns:
+        str: A JWT token for the authenticated user.
+    """
+    user_email = data["email"]
+    user_password = data["password"]
+
+    existing_user = find_user_by_email(user_email)
+
+    if not existing_user["result"]:
+        raise WrongEmailOrPassword()
+
+    if not check_password_hash(existing_user["result"]["password"], user_password):
+        raise WrongEmailOrPassword()
+
+    token = generate_jwt_token(str(existing_user["result"]["_id"]))
+
+    return token
