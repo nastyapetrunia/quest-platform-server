@@ -27,7 +27,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_SECRET_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_VALUE }}
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Upload package to S3 bucket
         run: aws s3 cp deploy_package.zip s3://${{ secrets.S3_BUCKET }}/
@@ -35,10 +35,17 @@ jobs:
       - name: Create new ElasticBeanstalk Application Version
         run: |
           aws elasticbeanstalk create-application-version \
-          --application-name ${{ vars.EB_APP_NAME }} \
+          --application-name ${{ env.EB_APP_NAME }} \
           --source-bundle S3Bucket=${{ secrets.S3_BUCKET }},S3Key="deploy_package.zip" \
           --version-label "ver-${{ github.sha }}" \
           --description "commit-sha-${{ github.sha }}"
 
       - name: Deploy new ElasticBeanstalk Application Version
-        run: aws elasticbeanstalk update-environment --environment-name ${{ vars.EB_ENV_NAME }} --version-label "ver-${{ github.sha }}"
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name "${{ env.EB_ENV_NAME }}" \
+            --version-label "ver-${{ github.sha }}" \
+            --option-settings \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MONGO_URI,Value="${{ secrets.MONGO_URI }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=MONGO_DB_NAME,Value="${{ secrets.MONGO_DB_NAME }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=JWT_SECRET_KEY,Value="${{ secrets.JWT_SECRET_KEY }}"
