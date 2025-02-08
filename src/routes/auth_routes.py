@@ -8,12 +8,24 @@ from src.services.auth import signup_with_email, login_with_email
 
 auth_ns = Namespace("auth", description="User Authentication")
 
+user_info_model = auth_ns.model('UserInfo', {
+    "_id": fields.String(description="User's unique identifier (_id) as a string"),
+    "name": fields.String(description="User's name"),
+    "email": fields.String(description="User's email address"),
+    "created_at": fields.DateTime(description="Account creation timestamp"),
+    "profile_picture": fields.String(description="Profile picture S3 URL", default=None),
+    "created_quests": fields.List(fields.String, description="List of created quests"),
+    "quest_history": fields.List(fields.String, description="List of quest history"),
+})
+
 signup_response_model = auth_ns.model('SignupResponse', {
-    "token": fields.String(description="JWT token for the authenticated user")
+    "token": fields.String(description="JWT token for the authenticated user"),
+    "user_info": fields.Nested(user_info_model, description="User details"),
 })
 
 login_response_model = auth_ns.model('LoginResponse', {
-    "token": fields.String(description="JWT token for the authenticated user")
+    "token": fields.String(description="JWT token for the authenticated user"),
+    "user_info": fields.Nested(user_info_model, description="User details"),
 })
 
 error_response_model = auth_ns.model('ErrorResponse', {
@@ -61,8 +73,9 @@ class SignupWithEmail(Resource):
             return {"error": format_payload_validation_errors(e.errors())}, 400
 
         try:
-            token = signup_with_email(data=data)
-            return {"token": token}, 201
+            token, user_info = signup_with_email(data=data)
+            user_info["created_at"] = user_info["created_at"].isoformat()
+            return {"token": token, "user_info": user_info}, 201
         except (EmailInUse, ValueError, DocumentValidationError, InvalidEmail) as e:
             return {"error": str(e)}, 400
         except (DatabaseConnectionError, InsertionError, Exception) as e:
@@ -83,8 +96,10 @@ class LoginWithEmail(Resource):
             return {"error": format_payload_validation_errors(e.errors())}, 400
 
         try:
-            token = login_with_email(data=data)
-            return {"token": token}, 200
+            token, user_info = login_with_email(data=data)
+            user_info["_id"] = str(user_info["_id"])
+            user_info["created_at"] = user_info["created_at"].isoformat()
+            return {"token": token, "user_info": user_info}, 200
         except ValueError as e:
             return {"error": str(e)}, 400
         except WrongEmailOrPassword as e:

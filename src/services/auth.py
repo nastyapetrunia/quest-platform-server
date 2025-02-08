@@ -1,4 +1,5 @@
 import datetime
+from typing import Tuple
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from src.database.utils.service import add_new_records
@@ -8,7 +9,7 @@ from src.utils.helpers import generate_jwt_token, validate_email
 from src.utils.exceptions import EmailInUse, InvalidEmail, WrongEmailOrPassword
 
 
-def signup_with_email(data: dict):
+def signup_with_email(data: dict) -> Tuple[str, dict]:
     """
     Registers a new user by signing up with an email, name, and password.
 
@@ -54,9 +55,11 @@ def signup_with_email(data: dict):
     }
     result = add_new_records(collection=Collections.USER, documents=new_user)
 
-    return generate_jwt_token(str(result["inserted_id"]))
+    new_user["_id"] = str(result["inserted_id"])
 
-def login_with_email(data: dict):
+    return generate_jwt_token(new_user["_id"]), new_user
+
+def login_with_email(data: dict) -> Tuple[str, dict]:
     """
     Authenticates a user by email and password.
 
@@ -78,14 +81,15 @@ def login_with_email(data: dict):
     user_email = data["email"]
     user_password = data["password"]
 
-    existing_user = find_user_by_email(user_email)
+    result = find_user_by_email(user_email)
+    existing_user = result["result"]
 
-    if not existing_user["result"]:
+    if not existing_user:
         raise WrongEmailOrPassword()
 
-    if not check_password_hash(existing_user["result"]["password"], user_password):
+    if not check_password_hash(existing_user["password"], user_password):
         raise WrongEmailOrPassword()
 
-    token = generate_jwt_token(str(existing_user["result"]["_id"]))
+    token = generate_jwt_token(str(existing_user["_id"]))
 
-    return token
+    return token, existing_user
