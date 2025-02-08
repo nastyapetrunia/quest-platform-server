@@ -36,5 +36,5 @@ def update_user_info(user_id: str, data: dict):
 
     data["_id"] = user_id_obj
 
-    return update_records(collection=Collections.USER,
-                          documents=data)
+    result = update_records(collection=Collections.USER, documents=data)
+    return result

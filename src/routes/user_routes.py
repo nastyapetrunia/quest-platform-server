@@ -60,8 +60,10 @@ class UserResource(Resource):
         data = request.get_json()
         try:
             result = update_user(user_id=user_id, data=data)
-            return "", 200
-        except (ValueError, DocumentValidationError) as e:
+            return result, 200
+        except (ValueError, DocumentValidationError, UpdateError) as e:
             return {"error": str(e)}, 400
-
-
+        except UserNotFoundError as e:
+            return {"error": str(e)}, 404
+        except Exception as e:
+            return {"error": str(e)}, 500

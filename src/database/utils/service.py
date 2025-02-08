@@ -7,7 +7,7 @@ from pymongo import errors, UpdateOne
 from src.database.utils.setup import client
 from src.database.utils.collections import Collections
 from src.database.utils.validators import validate_records
-from src.utils.exceptions import InsertionError, DatabaseConnectionError, DocumentValidationError, UpdateError
+from src.utils.exceptions import InsertionError, DatabaseConnectionError, DocumentValidationError, UpdateError, UserNotFoundError
 
 load_dotenv()
 logger = logging.getLogger('myLog')
@@ -133,24 +133,29 @@ def _update(documents: Union[List[dict], dict], db_name: str, collection_name: s
         collection = db[collection_name]
 
         if isinstance(documents, list):
+            success_return_message = "Successfully updated documents."
             result = collection.bulk_write([
                 UpdateOne({'_id': doc['_id']}, {'$set': doc}) for doc in documents
             ], ordered=False)
             logger.info(f"Updated document IDs: {result.modified_count}")
         else:
+            success_return_message = "Successfully updated document."
             result = collection.update_one({'_id': documents['_id']}, {'$set': documents})
             logger.info(f"Updated document ID: {documents['_id']}")
-        print("result: ", result)
 
-        if result.modified_count > 0:
-            return {"success": True, "message": "Successfully updated documents.", "result": result}
+        if result.matched_count == 0:
+            raise UserNotFoundError("No matching documents found to update.")
+
+        if result.modified_count == 0:
+            return {"success": True, "message": "No changes were made because the values are the same."}
         else:
-            raise UpdateError(f"Failed bulk update. No documents were updated.")
+            return {"success": True, "message": success_return_message}
 
     except errors.BulkWriteError as e:
         logger.error(f"Bulk write error occurred: {e.details}")
         raise UpdateError(f"Failed bulk update. Info: {e.details}")
     except Exception as e:
+        logger.error(f"Failed to update records in {collection_name}.")
         logger.error(f"Error occurred during update: {str(e)}")
         raise UpdateError(f"Failed to update documents. Info: {str(e)}")
 
@@ -179,8 +184,4 @@ def update_records(collection: Collections, documents: Union[List[dict], dict], 
     if not db_name:
         raise DatabaseConnectionError("Database name is not set in environment variables.")
 
-    try:
-        return _update(documents, db_name, collection_name)
-    except Exception as e:
-        logger.error(f"Failed to update records in {collection_name}: {str(e)}")
-        raise UpdateError(f"Failed to update records. Info: {str(e)}")
+    return _update(documents, db_name, collection_name)
