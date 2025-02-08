@@ -2,11 +2,13 @@ import os
 import re
 import jwt
 import datetime
+from functools import wraps
 from dotenv import load_dotenv
+from flask import request, abort
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 def generate_jwt_token(user_id: str) -> str:
     """Generate JWT Token for a user."""
@@ -15,7 +17,7 @@ def generate_jwt_token(user_id: str) -> str:
         "sub": user_id,
         "exp": expiration
     }
-    token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+    token = jwt.encode(payload, JWT_SECRET_KEY, algorithm="HS256")
     return token
 
 def format_payload_validation_errors(errors):
@@ -67,3 +69,27 @@ def validate_email(user_email):
         return False, "Local part too long"
 
     return True, "Valid email"
+
+def token_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            token = request.headers['Authorization'].split(" ")[1]  # Get token from "Bearer <token>"
+
+        if not token:
+            abort(401, "Token is missing")
+
+        try:
+            # Verify the token and decode it
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+            # Optionally, you can store the payload in the request context for later use
+            request.user_id = payload['sub']  # Assuming 'sub' is the user ID in the JWT
+        except jwt.ExpiredSignatureError:
+            abort(401, "Token has expired")
+        except jwt.InvalidTokenError:
+            abort(401, "Invalid token")
+
+        return f(*args, **kwargs)
+
+    return decorated_function
