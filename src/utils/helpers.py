@@ -1,18 +1,53 @@
 import os
 import re
 import jwt
+import uuid
+import boto3
 import datetime
+import mimetypes
 from functools import wraps
 from dotenv import load_dotenv
 from flask import request, abort
+from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
+S3_BUCKET_RESOURCES = os.getenv("S3_BUCKET_RESOURCES")
+S3_REGION = os.getenv("S3_REGION")
+S3_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
+S3_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+CLOUDFRONT_DISTRIBUTION = os.getenv("CLOUDFRONT_DISTRIBUTION")
+
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=S3_ACCESS_KEY,
+    aws_secret_access_key=S3_SECRET_KEY,
+    region_name=S3_REGION,
+)
+
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
+def generate_unique_filename(filename):
+    """Generate a unique filename using UUID and keep the original extension."""
+    ext = os.path.splitext(filename)[1]
+    return f"{uuid.uuid4().hex}{ext}"
+
+def upload_to_s3(file):
+    unique_filename = generate_unique_filename(file.filename)
+
+    content_type, _ = mimetypes.guess_type(file.filename)
+    content_type = content_type or 'application/octet-stream'
+
+    s3_client.upload_fileobj(
+        file, S3_BUCKET_RESOURCES, unique_filename, ExtraArgs={"ContentType": content_type}
+    )
+    return f"{CLOUDFRONT_DISTRIBUTION}/{unique_filename}"
+
 
 def generate_jwt_token(user_id: str) -> str:
     """Generate JWT Token for a user."""
-    expiration = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)  # Token valid for 1 day
+    expiration = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
     payload = {
         "sub": user_id,
         "exp": expiration
@@ -75,16 +110,14 @@ def token_required(f):
     def decorated_function(*args, **kwargs):
         token = None
         if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(" ")[1]  # Get token from "Bearer <token>"
+            token = request.headers['Authorization'].split(" ")[1]
 
         if not token:
             abort(401, "Token is missing")
 
         try:
-            # Verify the token and decode it
             payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
-            # Optionally, you can store the payload in the request context for later use
-            request.user_id = payload['sub']  # Assuming 'sub' is the user ID in the JWT
+            request.user_id = payload['sub']
         except jwt.ExpiredSignatureError:
             abort(401, "Token has expired")
         except jwt.InvalidTokenError:
