@@ -56,6 +56,8 @@ def signup_with_email(data: dict) -> Tuple[str, dict]:
     result = add_new_records(collection=Collections.USER, documents=new_user)
 
     new_user["_id"] = str(result["inserted_id"])
+    new_user["created_at"] = new_user["created_at"].isoformat()
+    del new_user["password"]
 
     return generate_jwt_token(new_user["_id"]), new_user
 
@@ -91,5 +93,9 @@ def login_with_email(data: dict) -> Tuple[str, dict]:
         raise WrongEmailOrPassword()
 
     token = generate_jwt_token(str(existing_user["_id"]))
+
+    existing_user["_id"] = str(existing_user["_id"])
+    existing_user["created_at"] = existing_user["created_at"].isoformat()
+    del existing_user["password"]
 
     return token, existing_user

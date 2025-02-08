@@ -8,7 +8,7 @@ from src.services.auth import signup_with_email, login_with_email
 
 auth_ns = Namespace("auth", description="User Authentication")
 
-user_info_model = auth_ns.model('UserInfo', {
+user_model = auth_ns.model('UserInfo', {
     "_id": fields.String(description="User's unique identifier (_id) as a string"),
     "name": fields.String(description="User's name"),
     "email": fields.String(description="User's email address"),
@@ -20,12 +20,12 @@ user_info_model = auth_ns.model('UserInfo', {
 
 signup_response_model = auth_ns.model('SignupResponse', {
     "token": fields.String(description="JWT token for the authenticated user"),
-    "user_info": fields.Nested(user_info_model, description="User details"),
+    "user_info": fields.Nested(user_model, description="User details"),
 })
 
 login_response_model = auth_ns.model('LoginResponse', {
     "token": fields.String(description="JWT token for the authenticated user"),
-    "user_info": fields.Nested(user_info_model, description="User details"),
+    "user_info": fields.Nested(user_model, description="User details"),
 })
 
 error_response_model = auth_ns.model('ErrorResponse', {
@@ -74,7 +74,6 @@ class SignupWithEmail(Resource):
 
         try:
             token, user_info = signup_with_email(data=data)
-            user_info["created_at"] = user_info["created_at"].isoformat()
             return {"token": token, "user_info": user_info}, 201
         except (EmailInUse, ValueError, DocumentValidationError, InvalidEmail) as e:
             return {"error": str(e)}, 400
@@ -97,8 +96,6 @@ class LoginWithEmail(Resource):
 
         try:
             token, user_info = login_with_email(data=data)
-            user_info["_id"] = str(user_info["_id"])
-            user_info["created_at"] = user_info["created_at"].isoformat()
             return {"token": token, "user_info": user_info}, 200
         except ValueError as e:
             return {"error": str(e)}, 400

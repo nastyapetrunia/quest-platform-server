@@ -22,3 +22,11 @@ class WrongEmailOrPassword(Exception):
     """Raised when user is trying to log in with invalid credentials"""
     def __init__(self, message="Wrong email or password"):
         super().__init__(message)
+
+class UserNotFoundError(Exception):
+    """Raised when user is not found in DB."""
+    def __init__(self, message="User is not found in DB"):
+        super().__init__(message)
+
+class UpdateError(Exception):
+    """Raised when an error occurred when trying to update document(s) in DB."""
