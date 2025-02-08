@@ -43,7 +43,6 @@ login_with_email_model = auth_ns.model('LoginWithEmail', {
     'password': fields.String(required=True, description='User password')
 })
 
-#TODO: add validation rules, remove from main
 class SignupWithEmailPayload(BaseModel):
     name: str
     email: str

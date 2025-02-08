@@ -147,7 +147,7 @@ def _update(documents: Union[List[dict], dict], db_name: str, collection_name: s
             raise UserNotFoundError("No matching documents found to update.")
 
         if result.modified_count == 0:
-            return {"success": True, "message": "No changes were made because the values are the same."}
+            return {"success": True, "message": "No changes were made."}
         else:
             return {"success": True, "message": success_return_message}
 
