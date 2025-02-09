@@ -48,4 +48,6 @@ class Upload(Resource):
             result = upload_files(files)
             return {"file_urls": result}, 200
         except Exception as e:
+
             return {"error": str(e)}, 500
+          

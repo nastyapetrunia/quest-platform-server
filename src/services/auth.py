@@ -28,6 +28,7 @@ def signup_with_email(data: dict) -> Tuple[str, dict]:
 
     Returns:
         str: A JWT token for the newly created user.
+        dict: Created user info
     """
     user_email = data["email"]
     user_password = data["password"]
@@ -79,6 +80,7 @@ def login_with_email(data: dict) -> Tuple[str, dict]:
 
     Returns:
         str: A JWT token for the authenticated user.
+        dict: User info
     """
     user_email = data["email"]
     user_password = data["password"]

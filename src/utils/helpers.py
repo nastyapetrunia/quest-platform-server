@@ -9,7 +9,6 @@ from functools import wraps
 from dotenv import load_dotenv
 from flask import request, abort
 from flask import Flask, request, jsonify
-from werkzeug.utils import secure_filename
 
 load_dotenv()
 
