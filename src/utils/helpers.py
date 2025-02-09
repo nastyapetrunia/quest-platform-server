@@ -42,6 +42,7 @@ def upload_to_s3(file):
     s3_client.upload_fileobj(
         file, S3_BUCKET_RESOURCES, unique_filename, ExtraArgs={"ContentType": content_type}
     )
+    print(f"{CLOUDFRONT_DISTRIBUTION}/{unique_filename}")
     return f"{CLOUDFRONT_DISTRIBUTION}/{unique_filename}"
 
 
