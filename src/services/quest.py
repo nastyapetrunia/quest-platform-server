@@ -24,7 +24,7 @@ def create_quest(data: dict, files: dict) -> dict:
         data["created_by"] = ObjectId(data["created_by"])
     except InvalidId as e:
         raise e
-
+    #TODO: add new quest for user
     result = add_new_records(collection=Collections.QUEST, documents=data)
 
     data["_id"] = str(result["inserted_id"])
