@@ -37,13 +37,14 @@ def update_user_info(user_id: str, data: dict):
 
     data["_id"] = user_id_obj
 
-    result = {"message": "Successful update"}
+    result = {}
 
     if data.get("profile_picture"):
         profile_picture_url = upload_to_s3(data["profile_picture"])
         data["profile_picture"] = profile_picture_url
         result["profile_picture_url"] = profile_picture_url
 
-    update_records(collection=Collections.USER, documents=data)
+    update_result = update_records(collection=Collections.USER, documents=data)
+    result["message"] = update_result["message"]
 
     return result
