@@ -25,6 +25,7 @@ quis_level_model = quest_ns.model('Level', {
 
 create_quest_model = quest_ns.model('CreateQuest', {
     "name": fields.String(required=True, description='Name of the quest'),
+    "title": fields.String(required=True, description="Title of the level"),
     "description": fields.String(required=True, description='Description of the quest'),
     "time_limit": fields.Integer(required=True, description='Time limit for completing the quest (in seconds)'),
     "difficulty": fields.String(required=True, description='Difficulty level of the quest'),

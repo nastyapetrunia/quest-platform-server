@@ -63,6 +63,7 @@ class CreateQuest(BaseModel):
 
     Attributes:
     - name: The name of the quest.
+    - title: A title of the quest.
     - description: A description of the quest.
     - time_limit: The time limit for completing the quest (in minutes).
     - created_at: Timestamp of when the quest was created.
@@ -72,6 +73,7 @@ class CreateQuest(BaseModel):
     - levels: A list of levels (input or quiz) for the quest.
     """
     name: str = Field(..., description="Name of the quest")
+    title: str = Field(..., description="Title of the quest")
     description: str = Field(..., description="Description of the quest")
     time_limit: int = Field(..., description="Time limit for completing the quest (in minutes)")
     created_at: datetime = Field(default_factory=lambda: datetime.now().astimezone(), description="Timestamp of when the quest was created")
