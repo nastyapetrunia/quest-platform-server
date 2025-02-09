@@ -32,9 +32,9 @@ class QuizLevel(BaseModel):
     id: str = Field(..., description="Unique identifier for the quiz level")
     name: str = Field(..., description="Name or title of the quiz level")
     question: str = Field(..., description="The question text for the quiz")
-    pictureUrls: List[HttpUrl] = Field(..., description="List of URLs for images related to the question")
+    picture_urls: List[HttpUrl] = Field(..., description="List of URLs for images related to the question")
     options: List[QuizOption] = Field(..., description="List of options for the quiz question")
-    correctOptionId: str = Field(..., description="The ID of the correct quiz option")
+    correct_option_id: str = Field(..., description="The ID of the correct quiz option")
 
 
 class InputLevel(BaseModel):
@@ -53,8 +53,8 @@ class InputLevel(BaseModel):
     id: str = Field(..., description="Unique identifier for the input level")
     name: str = Field(..., description="Name or title of the input level")
     question: str = Field(..., description="The question text for the input level")
-    pictureUrls: List[HttpUrl] = Field(..., description="List of URLs for images related to the question")
-    tryLimit: int = Field(..., description="The number of attempts allowed for the input level")
+    picture_urls: List[HttpUrl] = Field(..., description="List of URLs for images related to the question")
+    try_limit: int = Field(..., description="The number of attempts allowed for the input level")
 
 
 class CreateQuest(BaseModel):

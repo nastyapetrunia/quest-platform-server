@@ -1,4 +1,6 @@
 import datetime
+from bson import ObjectId
+from bson.errors import InvalidId
 
 from src.services.general import upload_files
 from src.database.utils.service import add_new_records
@@ -17,6 +19,11 @@ def create_quest(data: dict, files: dict) -> dict:
         level["pictureUrls"] = uploaded_pictures.get(level["id"], [])
 
     data["created_at"] = datetime.datetime.now(datetime.UTC)
+
+    try:
+        data["created_by"] = ObjectId(data["created_by"])
+    except InvalidId as e:
+        raise e
 
     result = add_new_records(collection=Collections.QUEST, documents=data)
 
