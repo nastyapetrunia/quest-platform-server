@@ -14,7 +14,7 @@ def get_user_by_id(user_id: str):
 
     return user
 
-def update_user(user_id: str, data: dict):
-    result = update_user_info(user_id=user_id, data=data)
+def update_user(user_id: str, data: dict, update_type: str = "$set", safe_mode: bool = True):
+    result = update_user_info(user_id=user_id, data=data, update_type=update_type, safe_mode=safe_mode)
 
     return result

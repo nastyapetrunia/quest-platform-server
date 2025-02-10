@@ -1,4 +1,5 @@
 import os
+from typing import Union
 from bson import ObjectId
 from bson.errors import InvalidId
 
@@ -28,14 +29,16 @@ def find_user_by_id(user_id: str) -> dict:
                 find_one=True,
                 exclude_id=False)
 
-def update_user_info(user_id: str, data: dict):
-    try:
-        user_id_obj = ObjectId(user_id)
-    except InvalidId as e:
-        logger.error("Invalid ObjectId.")
-        raise e
-
-    data["_id"] = user_id_obj
+def update_user_info(user_id: Union[str, ObjectId], data: dict, update_type: str = "$set", safe_mode: bool = True):
+    if isinstance(user_id, str):
+        try:
+            user_id_obj = ObjectId(user_id)
+            data["_id"] = user_id_obj
+        except InvalidId as e:
+            logger.error("Invalid ObjectId.")
+            raise e
+    else:
+        data["_id"] = user_id
 
     result = {}
 
@@ -44,7 +47,7 @@ def update_user_info(user_id: str, data: dict):
         data["profile_picture"] = profile_picture_url
         result["profile_picture_url"] = profile_picture_url
 
-    update_result = update_records(collection=Collections.USER, documents=data)
+    update_result = update_records(collection=Collections.USER, documents=data, update_type=update_type, safe_mode=safe_mode)
     result["message"] = update_result["message"]
 
     return result

@@ -109,7 +109,7 @@ def read(db_name: str, collection_name: str, query: dict = None, exclude_id: boo
         logger.error(f"Failed getting info from DB: {e}")
         raise e
 
-def _update(documents: Union[List[dict], dict], db_name: str, collection_name: str) -> dict:
+def _update(documents: Union[List[dict], dict], db_name: str, collection_name: str, update_type: str = "$set") -> dict:
     """
     Updates one or more documents in a specified MongoDB collection.
 
@@ -135,13 +135,14 @@ def _update(documents: Union[List[dict], dict], db_name: str, collection_name: s
         if isinstance(documents, list):
             success_return_message = "Successfully updated documents."
             result = collection.bulk_write([
-                UpdateOne({'_id': doc['_id']}, {'$set': doc}) for doc in documents
+                UpdateOne({'_id': doc['_id']}, {update_type: doc}) for doc in documents
             ], ordered=False)
             logger.info(f"Updated document IDs: {result.modified_count}")
         else:
             success_return_message = "Successfully updated document."
-            result = collection.update_one({'_id': documents['_id']}, {'$set': documents})
-            logger.info(f"Updated document ID: {documents['_id']}")
+            document_id = documents.pop('_id')
+            result = collection.update_one({'_id': document_id}, {update_type: documents})
+            logger.info(f"Updated document ID: {document_id}")
 
         if result.matched_count == 0:
             raise UserNotFoundError("No matching documents found to update.")
@@ -159,7 +160,7 @@ def _update(documents: Union[List[dict], dict], db_name: str, collection_name: s
         logger.error(f"Error occurred during update: {str(e)}")
         raise UpdateError(f"Failed to update documents. Info: {str(e)}")
 
-def update_records(collection: Collections, documents: Union[List[dict], dict], safe_mode: bool = True):
+def update_records(collection: Collections, documents: Union[List[dict], dict], safe_mode: bool = True, update_type: str = "$set"):
     """
     Updates existing records in a specified MongoDB collection with optional safety validation.
 
@@ -184,4 +185,4 @@ def update_records(collection: Collections, documents: Union[List[dict], dict], 
     if not db_name:
         raise DatabaseConnectionError("Database name is not set in environment variables.")
 
-    return _update(documents, db_name, collection_name)
+    return _update(documents, db_name, collection_name, update_type=update_type)
