@@ -15,12 +15,12 @@ class QuestHistory(BaseModel):
     - rating: Rating the user gave to the quest (if any)
     - attempted_at: Timestamp for when the quest was attempted
     """
-    quest_id: str  # Quest ID or reference to the quest
-    score: Optional[int] = None  # Score or None if not finished
-    completed: bool = False  # Whether the quest was completed
-    time_spent: Optional[float] = None  # Time spent on the quest (in seconds or any unit)
-    rating: Optional[int] = None  # Rating the user gave to the quest (if any)
-    attempted_at: datetime  # Timestamp for when the quest was attempted
+    quest_id: str
+    score: Optional[int] = None
+    completed: bool = False
+    time_spent: Optional[float] = None
+    # rating: Optional[int] = None
+    attempted_at: datetime
 
 class CreateUser(BaseModel):
     """

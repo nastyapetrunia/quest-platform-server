@@ -3,8 +3,9 @@ from bson import ObjectId
 from bson.errors import InvalidId
 
 from src.utils.helpers import upload_to_s3
+from src.database.quest.schema import QuestRating
 from src.database.utils.collections import Collections
-from src.database.utils.service import read, logger, update_records
+from src.database.utils.service import read, logger, update_records, custom_update_records
 
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
 
@@ -28,3 +29,14 @@ def find_all_quests():
                 query={},
                 find_one=False,
                 exclude_id=False)
+
+def add_new_rating(_id: ObjectId, rating: dict, avg_rating: float):
+    custom_query = {
+        "$push": {"ratings": rating},
+        "$set": {"avg_rating": avg_rating}
+    }
+    return custom_update_records(collection=Collections.QUEST,
+                                 _id=_id,
+                                 custom_query=custom_query,
+                                 validate_with=QuestRating,
+                                 validate_dict=rating)

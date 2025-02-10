@@ -24,9 +24,9 @@ class QuizLevel(BaseModel):
     - id: Unique identifier for the quiz level.
     - name: Name or title of the quiz level.
     - question: The quiz question text.
-    - pictureUrls: A list of URLs for images associated with the question.
+    - picture_urls: A list of URLs for images associated with the question.
     - options: A list of possible options for the quiz.
-    - correctOptionId: The ID of the correct answer.
+    - correct_option_id: The ID of the correct answer.
     """
     type: str = Field("quiz", description="The type of the level")
     id: str = Field(..., description="Unique identifier for the quiz level")
@@ -46,8 +46,8 @@ class InputLevel(BaseModel):
     - id: Unique identifier for the input level.
     - name: Name or title of the input level.
     - question: The question text for the input level.
-    - pictureUrls: A list of URLs for images associated with the question.
-    - tryLimit: The number of attempts allowed for the input level.
+    - picture_urls: A list of URLs for images associated with the question.
+    - try_limit: The number of attempts allowed for the input level.
     """
     type: str = Field("input", description="The type of the level")
     id: str = Field(..., description="Unique identifier for the input level")
@@ -56,6 +56,24 @@ class InputLevel(BaseModel):
     picture_urls: List[HttpUrl] = Field(..., description="List of URLs for images related to the question")
     try_limit: int = Field(..., description="The number of attempts allowed for the input level")
 
+class QuestRating(BaseModel):
+    """
+    Schema for defining a user's rating of a quest.
+
+    Attributes:
+    - review (Optional[str]): The text of the user's review for the quest. Can be omitted.
+    - user_id (ObjectId): The unique identifier of the user who provided the rating.
+    - rating (int): The numerical rating given by the user.
+    """
+
+    review: Optional[str] = Field(None, description="Optional text review of the quest")
+    user_id: ObjectId = Field(..., description="Unique ObjectId of the user who rated the quest")
+    rating: int = Field(..., description="Numeric rating given by the user (e.g., 1 to 5)")
+
+    model_config = ConfigDict(
+        extra='forbid',
+        arbitrary_types_allowed=True
+    )
 
 class CreateQuest(BaseModel):
     """
@@ -81,6 +99,9 @@ class CreateQuest(BaseModel):
     main_picture: Optional[HttpUrl] = Field(..., description="URL of the main picture for the quest")
     created_by: ObjectId = Field(..., description="ObjectId of the user who created the quest")
     levels: List[Union[InputLevel, QuizLevel]] = Field(default_factory=list, description="A list of levels in the quest (can be input or quiz levels)")
+    ratings: List[QuestRating] = Field(default_factory=list, description="A list of user ratings of the quiz")
+    times_played: int = Field(default=0, description="Number of times the quest has been played")
+    avg_rating: float = Field(default=0.0, description="Average rating of the quest, calculated from user ratings")
 
     model_config = ConfigDict(
         extra='forbid',
@@ -108,6 +129,9 @@ class UpdateQuest(BaseModel):
     difficulty: Optional[str] = Field(..., description="The difficulty level of the quest")
     main_picture: Optional[Union[HttpUrl, None]] = Field(..., description="URL of the main picture for the quest")
     levels: Optional[List[Union[InputLevel, QuizLevel]]] = Field(default_factory=list, description="A list of levels in the quest (can be input or quiz levels)")
+    ratings: Optional[List[QuestRating]] = Field(default_factory=list, description="A list of user ratings of the quest")
+    times_played: Optional[int] = Field(description="Number of times the quest has been played")
+    avg_rating: Optional[float] = Field(default=0.0, description="Average rating of the quest, calculated from user ratings")
 
     model_config = ConfigDict(
         extra='forbid',
