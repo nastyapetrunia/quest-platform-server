@@ -13,53 +13,51 @@ from src.utils.helpers import format_payload_validation_errors, token_required
 quest_ns = Namespace("quest", description="Quest Operations.")
 quests_ns = Namespace("quests", description="Quests Operations.")
 
-quis_option_model = quest_ns.model("Option", {
+quiz_option_model = quest_ns.model("Option", {
     "text": fields.String(required=True, description="The text of the quiz option"),
     "id": fields.String(required=True, description="Unique identifier for the quiz option")
 })
 
-quis_level_model = quest_ns.model('Level', {
+quiz_level_model = quest_ns.model('Level', {
     "type": fields.String(required=True, description="Type of the level, e.g., 'quiz' or 'input'"),
     "id": fields.String(required=True, description="Unique identifier for the level"),
     "name": fields.String(required=True, description="Name of the level"),
     "question": fields.String(required=True, description="The question for the level"),
     "picture_urls": fields.List(fields.String, description="URLs of pictures for the level"),
-    "options": fields.List(fields.Nested(quis_option_model), required=False, description="List of options for the quiz question"),
+    "options": fields.List(fields.Nested(quiz_option_model), required=False, description="List of options for the quiz question"),
     "try_limit": fields.Integer(required=False, description="The number of attempts allowed for the input level"),
     "correct_option_id": fields.String(required=False, description="The ID of the correct quiz option")
 })
 
 create_quest_model = quest_ns.model('CreateQuest', {
     "name": fields.String(required=True, description='Name of the quest'),
-    "title": fields.String(required=True, description="Title of the level"),
     "description": fields.String(required=True, description='Description of the quest'),
     "time_limit": fields.Integer(required=True, description='Time limit for completing the quest (in seconds)'),
     "difficulty": fields.String(required=True, description='Difficulty level of the quest'),
     "main_picture": fields.String(required=False, description='URL of the main picture for the quest (optional)'),
-    "levels": fields.List(fields.Nested(quis_level_model), description="A list of levels in the quest (can be input or quiz levels)"),
+    "levels": fields.List(fields.Nested(quiz_level_model), description="A list of levels in the quest (can be input or quiz levels)"),
 })
 
 quest_response_model = quest_ns.model('Quest', {
     "_id": fields.String(description="Quest's unique identifier (_id) as a string"),
     "name": fields.String(required=True, description='Name of the quest'),
-    "title": fields.String(required=True, description="Title of the level"),
     "description": fields.String(required=True, description='Description of the quest'),
     "time_limit": fields.Integer(required=True, description='Time limit for completing the quest (in seconds)'),
     "difficulty": fields.String(required=True, description='Difficulty level of the quest'),
     "main_picture": fields.String(required=False, description='URL of the main picture for the quest (optional)'),
     "created_by": fields.String(description="Author's unique identifier (_id) as a string"),
-    "levels": fields.List(fields.Nested(quis_level_model), description="A list of levels in the quest (can be input or quiz levels)"),
+    "levels": fields.List(fields.Nested(quiz_level_model), description="A list of levels in the quest (can be input or quiz levels)"),
 })
 
-quests_response_model = {
-    "levels": fields.List(fields.Nested(quest_response_model), description="A list of all quests"),
+quests_response_model = quest_ns.model("QuestsResponse", {
+    "quests": fields.List(fields.Nested(quest_response_model), description="A list of all quests")
+})
 
-}
 
 @quest_ns.route("")
 class CreateQuest(Resource):
     @quest_ns.expect(create_quest_model)
-    @quest_ns.response(201, 'Quest successfully created')
+    @quest_ns.response(201, 'Quest successfully created', quest_response_model)
     @quest_ns.response(400, 'Bad Request')
     @quest_ns.response(500, 'Internal Server Error')
     @token_required
