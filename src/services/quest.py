@@ -4,10 +4,10 @@ from bson.errors import InvalidId
 
 from src.services.user import update_user
 from src.services.general import upload_files
-from src.utils.exceptions import NotFoundError
 from src.database.utils.collections import Collections
 from src.database.utils.service import add_new_records
-from src.database.quest.service import find_quest_by_id, find_all_quests
+from src.utils.exceptions import NotFoundError, Unauthorized
+from src.database.quest.service import find_quest_by_id, find_all_quests, add_new_rating
 
 
 def create_quest(data: dict, files: dict) -> dict:
@@ -26,6 +26,8 @@ def create_quest(data: dict, files: dict) -> dict:
 
     data["created_at"] = datetime.datetime.now(datetime.UTC)
     data["time_limit"] = int(data["time_limit"])
+    data["ratings"] = []
+    data["times_played"] = 0
 
     try:
         data["created_by"] = ObjectId(data["created_by"])
@@ -50,10 +52,6 @@ def get_quest_by_id(quest_id: str):
     if not quest:
         raise NotFoundError()
 
-    quest["_id"] = str(quest["_id"])
-    quest["created_by"] = str(quest["created_by"])
-    quest["created_at"] = quest["created_at"].isoformat()
-
     return quest
 
 def get_all_quests():
@@ -65,4 +63,24 @@ def get_all_quests():
         doc["created_by"] = str(doc["created_by"])
         doc["created_at"] = doc["created_at"].isoformat()
 
+        doc["ratings"] = [{"user_id": str(rating["user_id"]),
+                             "review": rating["review"],
+                             "rating": rating["rating"]} for rating in doc["ratings"]]
+
     return all_quests
+
+def rate_quest(quest_id: str, rating: dict):
+    quest = get_quest_by_id(quest_id=quest_id)
+
+    if quest["ratings"]:
+        avg_rating = round(sum(old_rating["rating"] for old_rating in quest["ratings"])/len(quest["ratings"]), 1)
+    else:
+        avg_rating = rating["rating"]
+
+    rating["user_id"] = ObjectId(rating["user_id"])
+
+    result = add_new_rating(_id=quest["_id"],
+                            rating=rating,
+                            avg_rating=avg_rating)
+
+    return result

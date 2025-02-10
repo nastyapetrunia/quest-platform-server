@@ -30,3 +30,6 @@ class NotFoundError(Exception):
 
 class UpdateError(Exception):
     """Raised when an error occurred when trying to update document(s) in DB."""
+
+class Unauthorized(Exception):
+    """Raised when user attempts to request resource they are not allowed to request."""
