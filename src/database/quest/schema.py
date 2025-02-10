@@ -78,7 +78,7 @@ class CreateQuest(BaseModel):
     time_limit: int = Field(..., description="Time limit for completing the quest (in minutes)")
     created_at: datetime = Field(default_factory=lambda: datetime.now().astimezone(), description="Timestamp of when the quest was created")
     difficulty: str = Field(..., description="The difficulty level of the quest")
-    main_picture: Optional[Union[HttpUrl, None]] = Field(..., description="URL of the main picture for the quest")
+    main_picture: Optional[HttpUrl] = Field(..., description="URL of the main picture for the quest")
     created_by: ObjectId = Field(..., description="ObjectId of the user who created the quest")
     levels: List[Union[InputLevel, QuizLevel]] = Field(default_factory=list, description="A list of levels in the quest (can be input or quiz levels)")
 

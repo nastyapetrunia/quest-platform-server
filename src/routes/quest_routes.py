@@ -1,3 +1,5 @@
+import json
+
 from flask import request
 from pydantic import BaseModel, ValidationError
 from flask_restx import Namespace, Resource, fields
@@ -42,6 +44,7 @@ class CreateQuest(Resource):
     @token_required
     def post(self):
         data = request.form.to_dict()
+        data["levels"] = json.loads(data.get("levels", "[]"))
         data["created_by"] = request.user_id
 
         files = {}
@@ -50,7 +53,6 @@ class CreateQuest(Resource):
 
         try:
             result = create_quest(data=data, files=files)
-            print(result)
             return result, 201
         except (EmailInUse, ValueError, DocumentValidationError, InvalidEmail) as e:
             return {"error": str(e)}, 400
