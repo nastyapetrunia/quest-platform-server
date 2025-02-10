@@ -28,6 +28,7 @@ def create_quest(data: dict, files: dict) -> dict:
     data["time_limit"] = int(data["time_limit"])
     data["ratings"] = []
     data["times_played"] = 0
+    data["avg_rating"] = None
 
     try:
         data["created_by"] = ObjectId(data["created_by"])

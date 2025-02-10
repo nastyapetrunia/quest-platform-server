@@ -101,7 +101,7 @@ class CreateQuest(BaseModel):
     levels: List[Union[InputLevel, QuizLevel]] = Field(default_factory=list, description="A list of levels in the quest (can be input or quiz levels)")
     ratings: List[QuestRating] = Field(default_factory=list, description="A list of user ratings of the quiz")
     times_played: int = Field(default=0, description="Number of times the quest has been played")
-    avg_rating: float = Field(default=0.0, description="Average rating of the quest, calculated from user ratings")
+    avg_rating: Union[float, None] = Field(default=0.0, description="Average rating of the quest, calculated from user ratings")
 
     model_config = ConfigDict(
         extra='forbid',
