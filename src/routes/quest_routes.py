@@ -58,3 +58,28 @@ class CreateQuest(Resource):
             return {"error": str(e)}, 400
         except (DatabaseConnectionError, InsertionError, Exception) as e:
             return {"error": str(e)}, 500
+
+@quest_ns.route("/<string:quest_id>")
+@quest_ns.param("quest_id", "The unique ID of the quest")
+class GetUpdateQuest(Resource):
+    @quest_ns.expect(create_quest_model)
+    @quest_ns.response(201, 'Quest successfully created')
+    @quest_ns.response(400, 'Bad Request')
+    @quest_ns.response(500, 'Internal Server Error')
+    @token_required
+    def get(self):
+        data = request.form.to_dict()
+        data["levels"] = json.loads(data.get("levels", "[]"))
+        data["created_by"] = request.user_id
+
+        files = {}
+        for level_id in request.files:
+            files[level_id] = request.files.getlist(level_id)
+
+        try:
+            result = create_quest(data=data, files=files)
+            return result, 201
+        except (EmailInUse, ValueError, DocumentValidationError, InvalidEmail) as e:
+            return {"error": str(e)}, 400
+        except (DatabaseConnectionError, InsertionError, Exception) as e:
+            return {"error": str(e)}, 500
