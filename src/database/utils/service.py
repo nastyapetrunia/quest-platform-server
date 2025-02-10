@@ -7,7 +7,7 @@ from pymongo import errors, UpdateOne
 from src.database.utils.setup import client
 from src.database.utils.collections import Collections
 from src.database.utils.validators import validate_records
-from src.utils.exceptions import InsertionError, DatabaseConnectionError, DocumentValidationError, UpdateError, UserNotFoundError
+from src.utils.exceptions import InsertionError, DatabaseConnectionError, DocumentValidationError, UpdateError, NotFoundError
 
 load_dotenv()
 logger = logging.getLogger('myLog')
@@ -145,7 +145,7 @@ def _update(documents: Union[List[dict], dict], db_name: str, collection_name: s
             logger.info(f"Updated document ID: {document_id}")
 
         if result.matched_count == 0:
-            raise UserNotFoundError("No matching documents found to update.")
+            raise NotFoundError("No matching documents found to update.")
 
         if result.modified_count == 0:
             return {"success": True, "message": "No changes were made."}

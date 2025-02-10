@@ -1,3 +1,5 @@
+from bson.errors import InvalidId
+
 from flask import request
 from pydantic import BaseModel, ValidationError
 from flask_restx import Namespace, Resource, fields
@@ -51,10 +53,10 @@ class UserResource(Resource):
         """Retrieve user information by ID"""
         try:
             user = get_user_by_id(user_id)
-            return {"user": user}
-        except ValueError as e:
+            return {"user": user}, 200
+        except (ValueError, InvalidId) as e:
             return {"error": str(e)}, 400
-        except UserNotFoundError as e:
+        except NotFoundError as e:
             return {"error": str(e)}, 404
         except Exception as e:
             return {"error": str(e)}, 500
@@ -85,9 +87,9 @@ class UserResource(Resource):
         try:
             result = update_user(user_id=user_id, data=data)
             return result, 200
-        except (ValueError, DocumentValidationError, UpdateError) as e:
+        except (ValueError, DocumentValidationError, UpdateError, InvalidId) as e:
             return {"error": str(e)}, 400
-        except UserNotFoundError as e:
+        except NotFoundError as e:
             return {"error": str(e)}, 404
         except Exception as e:
             return {"error": str(e)}, 500
