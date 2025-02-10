@@ -1,4 +1,4 @@
-from src.utils.exceptions import *
+from src.utils.exceptions import NotFoundError
 from src.database.user.service import find_user_by_id, update_user_info
 
 def get_user_by_id(user_id: str):
@@ -6,7 +6,7 @@ def get_user_by_id(user_id: str):
     user = result["result"]
 
     if not user:
-        raise UserNotFoundError()
+        raise NotFoundError()
 
     user["_id"] = str(user["_id"])
     user["created_at"] = user["created_at"].isoformat()

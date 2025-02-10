@@ -20,3 +20,11 @@ def find_quest_by_id(quest_id: str) -> dict:
                 query={"_id": quest_id_obj},
                 find_one=True,
                 exclude_id=False)
+
+def find_all_quests():
+
+    return read(db_name=MONGO_DB_NAME,
+                collection_name="Quests",
+                query={},
+                find_one=False,
+                exclude_id=False)
