@@ -10,6 +10,11 @@ def get_user_by_id(user_id: str):
 
     user["_id"] = str(user["_id"])
     user["created_at"] = user["created_at"].isoformat()
+    user["created_quests"] = [str(quest) for quest in user["created_quests"]]
+
+    for quest in user["quest_history"]:
+        quest["quest_id"] = str(quest["quest_id"])
+        quest["attempted_at"] = quest["attempted_at"].isoformat()
     del user["password"]
 
     return user
