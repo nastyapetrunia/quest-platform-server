@@ -69,7 +69,7 @@ class UpdateUser(BaseModel):
     """
     id: ObjectId = Field(..., description="User unique ObjectId in string format", alias="_id")
     name: Optional[str] = Field(None, description="User name")
-    about_me: str = Field(..., description="User About me info")
+    about_me: Optional[str] = Field(..., description="User About me info")
     profile_picture: Optional[HttpUrl] = Field(None, description="User profile picture S3 url")
     created_quests: Optional[List[ObjectId]] = Field(default_factory=list,
                                                      description="List of quests created by the user")
