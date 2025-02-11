@@ -28,6 +28,7 @@ quest_history_model = user_ns.model("QuestHistory", {
     "quest_difficulty": fields.String(required=True, description="Quest difficulty"),
     "quest_name":  fields.String(required=True, description="Quest name"),
     "quest_main_picture": fields.String(required=True, description="Quest main picture url"),
+    "quest_total_levels": fields.Integer(required=True, description="Total num of levels in a quest"),
     "result": fields.Integer(required=False, description="Score the user achieved, or None if not finished"),
     "completed": fields.Boolean(required=True, description="Indicates if the quest was completed"),
     "time_spent": fields.Integer(required=False, description="Time spent on the quest (in seconds)"),

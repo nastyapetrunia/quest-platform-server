@@ -91,7 +91,8 @@ def get_user_quest_history_full_info(user_id: Union[str, ObjectId]):
             "completed": "$quest_history.completed",
             "time_spent": "$quest_history.time_spent",
             "attempted_at": "$quest_history.attempted_at",
-            "user_rating": "$quest_history.rating"
+            "user_rating": "$quest_history.rating",
+            "quest_total_levels": {"$size": "$quest_details.levels"}  # Count levels array length
         }}
     ]
 
