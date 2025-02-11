@@ -44,6 +44,14 @@ update_user_model = user_ns.model("UpdateUser", {
     "profile_picture": fields.Raw(description="New profile picture file", required=False),
 })
 
+update_quest_history_model = user_ns.model("UpdateQuestHistoryPayload", {
+    "quest_id": fields.String(required=True, description="Unique identifier for the quest"),
+    "result": fields.Integer(required=False, description="Score the user achieved, or None if not finished"),
+    "completed": fields.Boolean(required=True, description="Indicates if the quest was completed"),
+    "time_spent": fields.Integer(required=False, description="Time spent on the quest (in seconds)"),
+})
+
+
 class UpdateQuestHistoryPayload(BaseModel):
     quest_id: str
     result: Optional[int] = None
@@ -130,6 +138,7 @@ class UserQuestHistoryResource(Resource):
         except Exception as e:
             return {"error": str(e)}, 500
 
+    @user_ns.expect(update_quest_history_model)
     @user_ns.response(200, "Success")
     @user_ns.response(404, "User not found")
     @user_ns.response(401, "Unauthorized")
