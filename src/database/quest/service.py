@@ -40,3 +40,4 @@ def add_new_rating(_id: ObjectId, rating: dict, avg_rating: float):
                                  custom_query=custom_query,
                                  validate_with=QuestRating,
                                  validate_dict=rating)
+

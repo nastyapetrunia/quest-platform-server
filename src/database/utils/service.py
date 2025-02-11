@@ -219,7 +219,8 @@ def _custom_query_update(db_name: str,
 def update_records(collection: Collections,
                    documents: Union[List[dict], dict],
                    safe_mode: bool = True,
-                   update_type: str = "$set"):
+                   update_type: str = "$set",
+                   custom_validate_rule: Type[BaseModel] = None):
     """
     Updates existing records in a specified MongoDB collection with optional safety validation.
 
@@ -231,7 +232,11 @@ def update_records(collection: Collections,
     collection_name = collection.value.name
 
     if safe_mode:
-        result = validate_records(collection.value.validation_schema_update, documents)
+        if custom_validate_rule:
+            validate_with = custom_validate_rule
+        else:
+            validate_with = collection.value.validation_schema_update
+        result = validate_records(validate_with, documents)
         if not result["success"]:
             logger.error(f"Failed document validation for {collection_name} Collection. Info: {result['failed_records']}. "
                         f"To force update records, set safe_mode=False (not recommended).")
@@ -273,3 +278,18 @@ def custom_update_records(collection: Collections,
                                 collection_name=collection_name,
                                 _id=_id,
                                 custom_query=custom_query)
+
+def aggregate(collection: Collections,
+              pipeline: list):
+
+    db_name = DB_NAME
+    if not db_name:
+        raise DatabaseConnectionError("Database name is not set in environment variables.")
+
+    collection_name = collection.value.name
+
+    db = client[db_name]
+    collection = db[collection_name]
+
+    result = list(collection.aggregate(pipeline))
+    return result
