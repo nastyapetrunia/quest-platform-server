@@ -48,6 +48,7 @@ def signup_with_email(data: dict) -> Tuple[str, dict]:
     new_user = {
         "name": user_name,
         "email": user_email,
+        "about_me": "",
         "password": hashed_password,
         "created_at": datetime.datetime.now(datetime.UTC),
         "profile_picture": None,
