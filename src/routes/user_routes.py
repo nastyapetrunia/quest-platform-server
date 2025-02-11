@@ -22,6 +22,22 @@ user_model = user_ns.model('UserInfo', {
     "quest_history": fields.List(fields.String, description="List of quest history"),
 })
 
+quest_history_model = user_ns.model("QuestHistory", {
+    "quest_id": fields.String(required=True, description="Unique identifier for the quest"),
+    "quest_difficulty": fields.String(required=True, description="Quest difficulty"),
+    "quest_name":  fields.String(required=True, description="Quest name"),
+    "quest_main_picture": fields.String(required=True, description="Quest main picture url"),
+    "result": fields.Integer(required=False, description="Score the user achieved, or None if not finished"),
+    "completed": fields.Boolean(required=True, description="Indicates if the quest was completed"),
+    "time_spent": fields.Integer(required=False, description="Time spent on the quest (in seconds)"),
+    "rating": fields.Float(required=False, description="Rating the user gave to the quest (if any)"),
+    "attempted_at": fields.DateTime(description="Timestamp of when the quest was attempted"),
+})
+
+user_quest_history_model = user_ns.model("UserQuestHistory", {
+    "quest_history": fields.List(fields.Nested(quest_history_model), description="List of quests attempted by the user"),
+})
+
 # Payload model for updating user info
 update_user_model = user_ns.model("UpdateUser", {
     "name": fields.String(description="New user name", required=False),
@@ -93,7 +109,7 @@ class UserResource(Resource):
 @user_ns.route("/<string:user_id>/quest_history")
 @user_ns.param("user_id", "The unique ID of the user")
 class UserQuestHistoryResource(Resource):
-    @user_ns.response(200, "Success")
+    @user_ns.response(200, "Success", user_quest_history_model)
     @user_ns.response(404, "User not found")
     @user_ns.response(401, "Unauthorized")
     @token_required
