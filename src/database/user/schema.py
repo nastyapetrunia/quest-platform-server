@@ -9,18 +9,17 @@ class QuestHistory(BaseModel):
 
     Attributes:
     - quest_id: Unique identifier for the quest
-    - score: Score the user achieved or None if not finished
+    - result: Score the user achieved or None if not finished
     - completed: Boolean indicating if the quest was completed
     - time_spent: Time spent on the quest (in seconds or any unit)
     - rating: Rating the user gave to the quest (if any)
     - attempted_at: Timestamp for when the quest was attempted
     """
     quest_id: str
-    score: Optional[int] = None
+    result: Optional[int] = None
     completed: bool = False
-    time_spent: Optional[float] = None
-    # rating: Optional[int] = None
-    attempted_at: datetime
+    time_spent: Optional[int] = None
+    attempted_at: datetime = Field(default_factory=lambda: datetime.now().astimezone(), description="Timestamp of account creation")
 
 class CreateUser(BaseModel):
     """

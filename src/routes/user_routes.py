@@ -1,3 +1,5 @@
+from typing import Optional
+
 from bson.errors import InvalidId
 
 from flask import request
@@ -5,7 +7,7 @@ from pydantic import BaseModel, ValidationError
 from flask_restx import Namespace, Resource, fields
 
 from src.utils.exceptions import *
-from src.services.user import get_user_by_id, update_user
+from src.services.user import get_user_by_id, update_user, get_user_quest_history, update_user_quest_history
 from src.utils.helpers import format_payload_validation_errors, token_required
 
 user_ns = Namespace("user", description="Endpoints for user profile management, including account details and settings.")
@@ -23,24 +25,18 @@ user_model = user_ns.model('UserInfo', {
 # Payload model for updating user info
 update_user_model = user_ns.model("UpdateUser", {
     "name": fields.String(description="New user name", required=False),
-    "email": fields.String(description="New email", required=False),
     "profile_picture": fields.Raw(description="New profile picture file", required=False),
 })
 
-class SignupWithEmailPayload(BaseModel):
-    name: str
-    email: str
-    password: str
+class UpdateQuestHistoryPayload(BaseModel):
+    quest_id: str
+    result: Optional[int] = None
+    completed: bool = False
+    time_spent: Optional[int] = None
 
     class Config:
         extra = 'forbid'
 
-class LoginWithEmailPayload(BaseModel):
-    email: str
-    password: str
-
-    class Config:
-        extra = 'forbid'
 
 @user_ns.route("/<string:user_id>")
 @user_ns.param("user_id", "The unique ID of the user")
@@ -88,6 +84,57 @@ class UserResource(Resource):
             result = update_user(user_id=user_id, data=data)
             return result, 200
         except (ValueError, DocumentValidationError, UpdateError, InvalidId) as e:
+            return {"error": str(e)}, 400
+        except NotFoundError as e:
+            return {"error": str(e)}, 404
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+@user_ns.route("/<string:user_id>/quest_history")
+@user_ns.param("user_id", "The unique ID of the user")
+class UserQuestHistoryResource(Resource):
+    @user_ns.response(200, "Success")
+    @user_ns.response(404, "User not found")
+    @user_ns.response(401, "Unauthorized")
+    @token_required
+    def get(self, user_id):
+        """Retrieve user quest history by user ID"""
+        try:
+            quest_history = get_user_quest_history(user_id)
+
+            for quest in quest_history:
+                quest["quest_id"] = str(quest["quest_id"])
+                quest["attempted_at"] = quest["attempted_at"].isoformat()
+
+            return {"quest_history": quest_history}, 200
+        except (ValueError, InvalidId) as e:
+            return {"error": str(e)}, 400
+        except NotFoundError as e:
+            return {"error": str(e)}, 404
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    @user_ns.response(200, "Success")
+    @user_ns.response(404, "User not found")
+    @user_ns.response(401, "Unauthorized")
+    @token_required
+    def patch(self, user_id):
+        """Add new user quest history record"""
+        if user_id != request.user_id:
+            return {"error": "Unauthorized access"}, 401
+
+        data = request.get_json()
+
+        try:
+            UpdateQuestHistoryPayload(**data)
+        except ValidationError as e:
+            return {"error": format_payload_validation_errors(e.errors())}, 400
+
+        try:
+            quest_history = update_user_quest_history(user_id=user_id,
+                                                      new_quest_history=data)
+            return quest_history, 200
+        except (ValueError, InvalidId) as e:
             return {"error": str(e)}, 400
         except NotFoundError as e:
             return {"error": str(e)}, 404
