@@ -84,7 +84,7 @@ def get_user_quest_history_full_info(user_id: Union[str, ObjectId]):
         {"$project": {
             "_id": 0,
             "quest_id": "$quest_history.quest_id",
-            "quest_name": "$quest_details.name",
+            "quest_title": "$quest_details.title",
             "quest_difficulty": "$quest_details.difficulty",
             "quest_main_picture": "$quest_details.main_picture",
             "result": "$quest_history.result",
