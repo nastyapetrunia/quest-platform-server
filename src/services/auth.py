@@ -99,6 +99,11 @@ def login_with_email(data: dict) -> Tuple[str, dict]:
     existing_user["_id"] = str(existing_user["_id"])
     existing_user["created_at"] = existing_user["created_at"].isoformat()
     existing_user["created_quests"] = [str(quest) for quest in existing_user["created_quests"]]
+
+    for quest in existing_user["quest_history"]:
+        quest["quest_id"] = str(quest["quest_id"])
+        quest["attempted_at"] = quest["attempted_at"].isoformat()
+
     del existing_user["password"]
 
     return token, existing_user
