@@ -38,6 +38,7 @@ class CreateUser(BaseModel):
     """
     name: str = Field(..., description="User name")
     email: str = Field(..., description="User email")
+    about_me: str = Field(..., description="User About me info")
     password: str = Field(..., description="User password hash")
     created_at: datetime = Field(default_factory=lambda: datetime.now().astimezone(), description="Timestamp of account creation")
     profile_picture: Union[HttpUrl, None] = Field(..., description="User profile picture S3 url")
@@ -68,6 +69,7 @@ class UpdateUser(BaseModel):
     """
     id: ObjectId = Field(..., description="User unique ObjectId in string format", alias="_id")
     name: Optional[str] = Field(None, description="User name")
+    about_me: str = Field(..., description="User About me info")
     profile_picture: Optional[HttpUrl] = Field(None, description="User profile picture S3 url")
     created_quests: Optional[List[ObjectId]] = Field(default_factory=list,
                                                      description="List of quests created by the user")

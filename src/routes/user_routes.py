@@ -15,6 +15,7 @@ user_ns = Namespace("user", description="Endpoints for user profile management, 
 user_model = user_ns.model('UserInfo', {
     "_id": fields.String(description="User's unique identifier (_id) as a string"),
     "name": fields.String(description="User's name"),
+    "about_me": fields.String(description="About the user"),
     "email": fields.String(description="User's email address"),
     "created_at": fields.DateTime(description="Account creation timestamp"),
     "profile_picture": fields.String(description="Profile picture S3 URL", default=None),
@@ -41,6 +42,7 @@ user_quest_history_model = user_ns.model("UserQuestHistory", {
 # Payload model for updating user info
 update_user_model = user_ns.model("UpdateUser", {
     "name": fields.String(description="New user name", required=False),
+    "about_me": fields.String(description="New About me", required=False),
     "profile_picture": fields.Raw(description="New profile picture file", required=False),
 })
 
@@ -73,6 +75,9 @@ class UserResource(Resource):
         """Retrieve user information by ID"""
         try:
             user = get_user_by_id(user_id)
+            if user_id != request.user_id:
+                del user["email"]
+
             return {"user": user}, 200
         except (ValueError, InvalidId) as e:
             return {"error": str(e)}, 400
@@ -93,12 +98,12 @@ class UserResource(Resource):
             return {"error": "Unauthorized access"}, 401
 
         name = request.form.get('name')
-        email = request.form.get('email')
+        about_me = request.form.get('about_me')
         profile_picture = request.files.get('profile_picture')
 
         data = {
             "name": name,
-            "email": email,
+            "about_me": about_me,
             "profile_picture": profile_picture
         }
 
