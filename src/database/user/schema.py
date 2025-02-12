@@ -9,18 +9,17 @@ class QuestHistory(BaseModel):
 
     Attributes:
     - quest_id: Unique identifier for the quest
-    - score: Score the user achieved or None if not finished
+    - result: Score the user achieved or None if not finished
     - completed: Boolean indicating if the quest was completed
     - time_spent: Time spent on the quest (in seconds or any unit)
     - rating: Rating the user gave to the quest (if any)
     - attempted_at: Timestamp for when the quest was attempted
     """
-    quest_id: str  # Quest ID or reference to the quest
-    score: Optional[int] = None  # Score or None if not finished
-    completed: bool = False  # Whether the quest was completed
-    time_spent: Optional[float] = None  # Time spent on the quest (in seconds or any unit)
-    rating: Optional[int] = None  # Rating the user gave to the quest (if any)
-    attempted_at: datetime  # Timestamp for when the quest was attempted
+    quest_id: str
+    result: Optional[int] = None
+    completed: bool = False
+    time_spent: Optional[int] = None
+    attempted_at: datetime = Field(default_factory=lambda: datetime.now().astimezone(), description="Timestamp of account creation")
 
 class CreateUser(BaseModel):
     """
@@ -39,6 +38,7 @@ class CreateUser(BaseModel):
     """
     name: str = Field(..., description="User name")
     email: str = Field(..., description="User email")
+    about_me: str = Field(..., description="User About me info")
     password: str = Field(..., description="User password hash")
     created_at: datetime = Field(default_factory=lambda: datetime.now().astimezone(), description="Timestamp of account creation")
     profile_picture: Union[HttpUrl, None] = Field(..., description="User profile picture S3 url")
@@ -69,6 +69,7 @@ class UpdateUser(BaseModel):
     """
     id: ObjectId = Field(..., description="User unique ObjectId in string format", alias="_id")
     name: Optional[str] = Field(None, description="User name")
+    about_me: Optional[str] = Field(None, description="User About me info")
     profile_picture: Optional[HttpUrl] = Field(None, description="User profile picture S3 url")
     created_quests: Optional[List[ObjectId]] = Field(default_factory=list,
                                                      description="List of quests created by the user")

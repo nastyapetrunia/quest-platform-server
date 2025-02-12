@@ -23,10 +23,13 @@ class WrongEmailOrPassword(Exception):
     def __init__(self, message="Wrong email or password"):
         super().__init__(message)
 
-class UserNotFoundError(Exception):
-    """Raised when user is not found in DB."""
-    def __init__(self, message="User is not found in DB"):
+class NotFoundError(Exception):
+    """Raised when document is not found in DB."""
+    def __init__(self, message="Document is not found in DB"):
         super().__init__(message)
 
 class UpdateError(Exception):
     """Raised when an error occurred when trying to update document(s) in DB."""
+
+class Unauthorized(Exception):
+    """Raised when user attempts to request resource they are not allowed to request."""

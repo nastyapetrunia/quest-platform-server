@@ -1,13 +1,15 @@
 import os
 import logging
-from typing import List, Union
+from bson import ObjectId
+from pydantic import BaseModel
 from dotenv import load_dotenv
+from typing import List, Union, Type
 from pymongo import errors, UpdateOne
 
 from src.database.utils.setup import client
 from src.database.utils.collections import Collections
 from src.database.utils.validators import validate_records
-from src.utils.exceptions import InsertionError, DatabaseConnectionError, DocumentValidationError, UpdateError, UserNotFoundError
+from src.utils.exceptions import InsertionError, DatabaseConnectionError, DocumentValidationError, UpdateError, NotFoundError
 
 load_dotenv()
 logger = logging.getLogger('myLog')
@@ -109,7 +111,10 @@ def read(db_name: str, collection_name: str, query: dict = None, exclude_id: boo
         logger.error(f"Failed getting info from DB: {e}")
         raise e
 
-def _update(documents: Union[List[dict], dict], db_name: str, collection_name: str) -> dict:
+def _update(documents: Union[List[dict], dict],
+            db_name: str,
+            collection_name: str,
+            update_type: str = "$set") -> dict:
     """
     Updates one or more documents in a specified MongoDB collection.
 
@@ -135,19 +140,20 @@ def _update(documents: Union[List[dict], dict], db_name: str, collection_name: s
         if isinstance(documents, list):
             success_return_message = "Successfully updated documents."
             result = collection.bulk_write([
-                UpdateOne({'_id': doc['_id']}, {'$set': doc}) for doc in documents
+                UpdateOne({'_id': doc['_id']}, {update_type: doc}) for doc in documents
             ], ordered=False)
             logger.info(f"Updated document IDs: {result.modified_count}")
         else:
             success_return_message = "Successfully updated document."
-            result = collection.update_one({'_id': documents['_id']}, {'$set': documents})
-            logger.info(f"Updated document ID: {documents['_id']}")
+            document_id = documents.pop('_id')
+            result = collection.update_one({'_id': document_id}, {update_type: documents})
+            logger.info(f"Updated document ID: {document_id}")
 
         if result.matched_count == 0:
-            raise UserNotFoundError("No matching documents found to update.")
+            raise NotFoundError("No matching documents found to update.")
 
         if result.modified_count == 0:
-            return {"success": True, "message": "No changes were made because the values are the same."}
+            return {"success": True, "message": "No changes were made."}
         else:
             return {"success": True, "message": success_return_message}
 
@@ -159,7 +165,62 @@ def _update(documents: Union[List[dict], dict], db_name: str, collection_name: s
         logger.error(f"Error occurred during update: {str(e)}")
         raise UpdateError(f"Failed to update documents. Info: {str(e)}")
 
-def update_records(collection: Collections, documents: Union[List[dict], dict], safe_mode: bool = True):
+def _custom_query_update(db_name: str,
+                         collection_name: str,
+                         _id: ObjectId,
+                         custom_query: dict) -> dict:
+    """
+    Updates one or more documents in a specified MongoDB collection.
+
+    Args:
+        documents: A single document (dict) or a list of documents (list of dicts) to be updated.
+        db_name: Name of the database where the collection is located.
+        collection_name: Name of the collection to update documents in.
+
+    Raises:
+        ValueError: If `documents` is empty or if `db_name` or `collection_name` is empty.
+        DatabaseConnectionError: If there are issues connecting to the database.
+        UpdateError: If update fails due to issues with the documents or MongoDB operations.
+    """
+    if not custom_query or not _id:
+        raise ValueError("Nothing to update.")
+    if not db_name or not collection_name:
+        raise ValueError("db_name and collection_name cannot be empty.")
+
+    try:
+        db = client[db_name]
+        collection = db[collection_name]
+
+        update_query = [
+            UpdateOne(
+                {"_id": _id},  # Quest filter
+                custom_query
+            )
+        ]
+
+        result = collection.bulk_write(update_query)
+
+        if result.matched_count == 0:
+            raise NotFoundError("No matching documents found to update.")
+
+        if result.modified_count == 0:
+            return {"success": True, "message": "No changes were made."}
+        else:
+            return {"success": True, "message": "Successfully updated document."}
+
+    except errors.BulkWriteError as e:
+        logger.error(f"Bulk write error occurred: {e.details}")
+        raise UpdateError(f"Failed bulk update. {e.details}")
+    except Exception as e:
+        logger.error(f"Failed to update records in {collection_name}.")
+        logger.error(f"Error occurred during update: {str(e)}")
+        raise UpdateError(f"Failed to update documents. Info: {str(e)}")
+
+def update_records(collection: Collections,
+                   documents: Union[List[dict], dict],
+                   safe_mode: bool = True,
+                   update_type: str = "$set",
+                   custom_validate_rule: Type[BaseModel] = None):
     """
     Updates existing records in a specified MongoDB collection with optional safety validation.
 
@@ -171,7 +232,11 @@ def update_records(collection: Collections, documents: Union[List[dict], dict], 
     collection_name = collection.value.name
 
     if safe_mode:
-        result = validate_records(collection.value.validation_schema_update, documents)
+        if custom_validate_rule:
+            validate_with = custom_validate_rule
+        else:
+            validate_with = collection.value.validation_schema_update
+        result = validate_records(validate_with, documents)
         if not result["success"]:
             logger.error(f"Failed document validation for {collection_name} Collection. Info: {result['failed_records']}. "
                         f"To force update records, set safe_mode=False (not recommended).")
@@ -184,4 +249,47 @@ def update_records(collection: Collections, documents: Union[List[dict], dict], 
     if not db_name:
         raise DatabaseConnectionError("Database name is not set in environment variables.")
 
-    return _update(documents, db_name, collection_name)
+    return _update(documents, db_name, collection_name, update_type=update_type)
+
+def custom_update_records(collection: Collections,
+                          _id: ObjectId,
+                          custom_query: dict,
+                          validate_with: Type[BaseModel] = None,
+                          validate_dict: dict = None,
+                          safe_mode: bool = True):
+
+    collection_name = collection.value.name
+
+    if safe_mode:
+        result = validate_records(validate_with, validate_dict)
+        if not result["success"]:
+            logger.error(f"Failed document validation for {collection_name} Collection. Info: {result['failed_records']}. "
+                        f"To force update records, set safe_mode=False (not recommended).")
+            raise DocumentValidationError("Failed validation.")
+    else:
+        logger.info("Safe mode is off.")
+        logger.warning("Force updating records without validation is not recommended.")
+
+    db_name = DB_NAME
+    if not db_name:
+        raise DatabaseConnectionError("Database name is not set in environment variables.")
+
+    return _custom_query_update(db_name=db_name,
+                                collection_name=collection_name,
+                                _id=_id,
+                                custom_query=custom_query)
+
+def aggregate(collection: Collections,
+              pipeline: list):
+
+    db_name = DB_NAME
+    if not db_name:
+        raise DatabaseConnectionError("Database name is not set in environment variables.")
+
+    collection_name = collection.value.name
+
+    db = client[db_name]
+    collection = db[collection_name]
+
+    result = list(collection.aggregate(pipeline))
+    return result

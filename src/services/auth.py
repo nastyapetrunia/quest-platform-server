@@ -28,6 +28,7 @@ def signup_with_email(data: dict) -> Tuple[str, dict]:
 
     Returns:
         str: A JWT token for the newly created user.
+        dict: Created user info
     """
     user_email = data["email"]
     user_password = data["password"]
@@ -47,6 +48,7 @@ def signup_with_email(data: dict) -> Tuple[str, dict]:
     new_user = {
         "name": user_name,
         "email": user_email,
+        "about_me": "",
         "password": hashed_password,
         "created_at": datetime.datetime.now(datetime.UTC),
         "profile_picture": None,
@@ -79,6 +81,7 @@ def login_with_email(data: dict) -> Tuple[str, dict]:
 
     Returns:
         str: A JWT token for the authenticated user.
+        dict: User info
     """
     user_email = data["email"]
     user_password = data["password"]
@@ -96,6 +99,12 @@ def login_with_email(data: dict) -> Tuple[str, dict]:
 
     existing_user["_id"] = str(existing_user["_id"])
     existing_user["created_at"] = existing_user["created_at"].isoformat()
+    existing_user["created_quests"] = [str(quest) for quest in existing_user["created_quests"]]
+
+    for quest in existing_user["quest_history"]:
+        quest["quest_id"] = str(quest["quest_id"])
+        quest["attempted_at"] = quest["attempted_at"].isoformat()
+
     del existing_user["password"]
 
     return token, existing_user
