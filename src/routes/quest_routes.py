@@ -57,7 +57,7 @@ quest_rating_model = quest_ns.model('QuestRating', {
     "review": fields.String(required=False, description='User review')
 })
 
-quest_ratings_response_model = quest_ns.model('QuestRatingResponse', {quest_ns.model('QuestRating', {
+quest_ratings_response_model = quest_ns.model('QuestRatingResponse', {
     "rating": fields.Integer(required=True, description='User rating'),
     "review": fields.String(required=False, description='User review'),
     "user_id": fields.String(required=False, description="User's unique identifier (_id) as a string"),
