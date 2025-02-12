@@ -68,6 +68,7 @@ class UpdateQuestHistoryPayload(BaseModel):
 @user_ns.route("/<string:user_id>")
 @user_ns.param("user_id", "The unique ID of the user")
 class UserResource(Resource):
+    @user_ns.doc(security="JWT")
     @user_ns.response(200, "Success", user_model)
     @user_ns.response(404, "User not found")
     @user_ns.response(401, "Unauthorized")
