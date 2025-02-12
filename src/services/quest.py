@@ -74,7 +74,9 @@ def rate_quest(quest_id: str, rating: dict):
     quest = get_quest_by_id(quest_id=quest_id)
 
     if quest["ratings"]:
-        avg_rating = round(sum(old_rating["rating"] for old_rating in quest["ratings"])/len(quest["ratings"]), 1)
+        old_ratings = quest["ratings"]
+        old_ratings.append(rating)
+        avg_rating = round(sum(old_rating["rating"] for old_rating in old_ratings)/len(old_ratings), 1)
     else:
         avg_rating = rating["rating"]
 
