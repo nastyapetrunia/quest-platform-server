@@ -7,7 +7,7 @@ from src.services.general import upload_files
 from src.database.utils.collections import Collections
 from src.database.utils.service import add_new_records
 from src.utils.exceptions import NotFoundError, Unauthorized
-from src.database.quest.service import find_quest_by_id, find_all_quests, add_new_rating
+from src.database.quest.service import find_quest_by_id, find_all_quests, add_new_rating, get_user_quest_history_full_info
 
 
 def create_quest(data: dict, files: dict) -> dict:
@@ -87,3 +87,9 @@ def rate_quest(quest_id: str, rating: dict):
                             avg_rating=avg_rating)
 
     return result
+
+def get_quest_ratings(quest_id: str):
+
+    quest_history = get_user_quest_history_full_info(quest_id=quest_id)
+
+    return quest_history
