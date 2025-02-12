@@ -57,12 +57,17 @@ quest_rating_model = quest_ns.model('QuestRating', {
     "review": fields.String(required=False, description='User review')
 })
 
-quest_ratings_response_model = quest_ns.model('QuestRatingResponse', {
+quest_rating_response_model = quest_ns.model('QuestRatingResponse', {
     "rating": fields.Integer(required=True, description='User rating'),
     "review": fields.String(required=False, description='User review'),
     "user_id": fields.String(required=False, description="User's unique identifier (_id) as a string"),
     "user_name": fields.String(required=False, description="User name"),
     "user_profile_picture": fields.String(required=False, description="User profile picture")
+})
+
+quest_ratings_response_model = quest_ns.model('QuestRatingsResponse', {
+    "quest_ratings": fields.List(fields.Nested(quest_rating_response_model), description="A list of all quest ratings")
+
 })
 
 @quest_ns.route("")
@@ -168,16 +173,12 @@ class GetQuestRatings(Resource):
     def get(self, quest_id):
         """Retrieve quest information by ID"""
         try:
-            quest = get_quest_ratings(quest_id)
+            quest_ratings = get_quest_ratings(quest_id)
 
-            quest["_id"] = str(quest["_id"])
-            quest["created_by"] = str(quest["created_by"])
-            quest["created_at"] = quest["created_at"].isoformat()
+            for rating in quest_ratings:
+                rating["user_id"] = str(rating["user_id"])
 
-            quest["ratings"] = [{"user_id": str(rating["user_id"]),
-                                 "review": rating["review"],
-                                 "rating": rating["rating"]} for rating in quest["ratings"]]
-            return {"quest": quest}, 200
+            return {"quest_ratings": quest_ratings}, 200
         except ValueError as e:
             return {"error": str(e)}, 400
         except NotFoundError as e:
