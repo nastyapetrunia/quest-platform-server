@@ -171,7 +171,7 @@ class GetQuestRatings(Resource):
     @quest_ns.response(401, "Unauthorized")
     @token_required
     def get(self, quest_id):
-        """Retrieve quest information by ID"""
+        """Retrieve quest ratings with user info by quest ID"""
         try:
             quest_ratings = get_quest_ratings(quest_id)
 
