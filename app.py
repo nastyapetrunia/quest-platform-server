@@ -16,7 +16,8 @@ CORS(app, resources={r"/*": {"origins": "*"}}, allow_headers="*")
 
 api = Api(app, version='1.0', title='MVP Quests API',
           description='API for MVP Quests services.',
-          doc='/swagger/')
+          doc='/swagger/',
+          authorizations={"JWT": {"type": "apiKey", "in": "header", "name": "Authorization", "description": "Type: Bearer your_token"}})
 
 api.add_namespace(auth_ns)
 api.add_namespace(user_ns)

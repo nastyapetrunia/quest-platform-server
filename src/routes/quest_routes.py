@@ -72,6 +72,7 @@ quest_ratings_response_model = quest_ns.model('QuestRatingsResponse', {
 
 @quest_ns.route("")
 class CreateQuest(Resource):
+    @quest_ns.doc(security="JWT")
     @quest_ns.expect(create_quest_model)
     @quest_ns.response(201, 'Quest successfully created', quest_response_model)
     @quest_ns.response(400, 'Bad Request')
@@ -111,9 +112,13 @@ class GetUpdateQuest(Resource):
             quest["created_by"] = str(quest["created_by"])
             quest["created_at"] = quest["created_at"].isoformat()
 
-            quest["ratings"] = [{"user_id": str(rating["user_id"]),
-                                 "review": rating["review"],
-                                 "rating": rating["rating"]} for rating in quest["ratings"]]
+            quest_ratings = get_quest_ratings(quest_id)
+
+            for rating in quest_ratings:
+                rating["user_id"] = str(rating["user_id"])
+
+            quest["ratings"] = quest_ratings
+
             return {"quest": quest}, 200
         except ValueError as e:
             return {"error": str(e)}, 400
