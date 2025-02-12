@@ -7,7 +7,7 @@ from flask_restx import Namespace, Resource, fields
 
 from src.utils.exceptions import *
 from src.utils.helpers import format_payload_validation_errors, token_required
-from src.services.quest import get_quest_by_id, get_all_quests, rate_quest, create_quest
+from src.services.quest import get_quest_by_id, get_all_quests, rate_quest, create_quest, get_quest_ratings
 
 quest_ns = Namespace("quest", description="Quest Operations.")
 quests_ns = Namespace("quests", description="Quests Operations.")
@@ -57,6 +57,13 @@ quest_rating_model = quest_ns.model('QuestRating', {
     "review": fields.String(required=False, description='User review')
 })
 
+quest_ratings_response_model = quest_ns.model('QuestRatingResponse', {
+    "rating": fields.Integer(required=True, description='User rating'),
+    "review": fields.String(required=False, description='User review'),
+    "user_id": fields.String(required=False, description="User's unique identifier (_id) as a string"),
+    "user_name": fields.String(required=False, description="User name"),
+    "user_profile_picture": fields.String(required=False, description="User profile picture")
+})
 
 @quest_ns.route("")
 class CreateQuest(Resource):
@@ -148,5 +155,32 @@ class AllQuests(Resource):
         try:
             result = get_all_quests()
             return result, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+@quest_ns.route("/<string:quest_id>/ratings")
+@quest_ns.param("quest_id", "The unique ID of the quest")
+class GetQuestRatings(Resource):
+    @quest_ns.response(200, "Success", quest_ratings_response_model)
+    @quest_ns.response(404, "Quest not found")
+    @quest_ns.response(401, "Unauthorized")
+    @token_required
+    def get(self, quest_id):
+        """Retrieve quest information by ID"""
+        try:
+            quest = get_quest_ratings(quest_id)
+
+            quest["_id"] = str(quest["_id"])
+            quest["created_by"] = str(quest["created_by"])
+            quest["created_at"] = quest["created_at"].isoformat()
+
+            quest["ratings"] = [{"user_id": str(rating["user_id"]),
+                                 "review": rating["review"],
+                                 "rating": rating["rating"]} for rating in quest["ratings"]]
+            return {"quest": quest}, 200
+        except ValueError as e:
+            return {"error": str(e)}, 400
+        except NotFoundError as e:
+            return {"error": str(e)}, 404
         except Exception as e:
             return {"error": str(e)}, 500

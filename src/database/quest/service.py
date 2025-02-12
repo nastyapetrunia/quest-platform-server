@@ -41,3 +41,5 @@ def add_new_rating(_id: ObjectId, rating: dict, avg_rating: float):
                                  validate_with=QuestRating,
                                  validate_dict=rating)
 
+def get_user_quest_history_full_info(quest_id: str):
+    pass

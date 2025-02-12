@@ -3,6 +3,7 @@ from flask_socketio import SocketIO
 from flask_restx import Api
 from flask_cors import CORS
 
+from src.database.utils.setup import logger
 from src.routes.auth_routes import auth_ns
 from src.routes.user_routes import user_ns
 from src.routes.general_routes import general_ns
@@ -23,6 +24,14 @@ api.add_namespace(quest_ns)
 api.add_namespace(quests_ns)
 api.add_namespace(general_ns)
 
-@socketio.on("message")
-def echo_message(msg):
-    socketio.send(f"Echo: {msg}")
+@socketio.on("progressUpdate")
+def handle_message(data):
+    """
+    Handles incoming messages and emits a userProgressUpdate event.
+
+    :param data: JSON object received from the client.
+    """
+    if isinstance(data, dict):
+        socketio.emit("userProgressUpdate", {"status": "success", "received": data})
+    else:
+        socketio.emit("userProgressUpdate", {"status": "error", "received": data})
